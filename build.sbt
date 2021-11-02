@@ -123,3 +123,12 @@ lazy val multiConnector = Project("darwin-multi-connector", file("multi-connecto
   .dependsOn(confluentConnector % Test)
   .settings(crossScalaVersions := Versions.crossScalaVersions)
   .settings(libraryDependencies += Dependencies.scalatest)
+
+lazy val morphline = Project("darwin-morphlines", file("morphlines"))
+  .settings(Settings.commonSettings: _*)
+  .dependsOn(coreCommon)
+  .dependsOn(core)
+  .dependsOn(mockConnector % Test)
+  .settings(crossScalaVersions := Versions.crossScalaVersions)
+  .settings(libraryDependencies ++= Dependencies.morplines)
+  .settings()
