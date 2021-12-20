@@ -86,7 +86,7 @@ public final class ReadDarwinAvroBuilder implements CommandBuilder {
         }
 
         @Override
-        protected boolean doProcess(Record inputRecord, InputStream in) throws IOException {
+        protected boolean doProcess(Record inputRecord) {
             Record template = inputRecord.copy();
 
             template.put(Fields.ATTACHMENT_MIME_TYPE, ReadDarwinAvroBuilder.AVRO_MEMORY_MIME_TYPE);
@@ -98,11 +98,17 @@ public final class ReadDarwinAvroBuilder implements CommandBuilder {
             Record outputRecord = template.copy();
 
             avroMap.forEach((k, v) -> {
+                LOG.debug("Setting data {} to record", k);
                 outputRecord.put(k, v);
                 incrementNumRecords();
             });
 
             return getChild().process(outputRecord);
+        }
+
+        @Override
+        protected boolean doProcess(Record record, InputStream stream) throws IOException {
+            return false;
         }
 
         private Map<String, Map<String, Object>> decodeMessages(Record morphlineRecord) {
@@ -114,8 +120,13 @@ public final class ReadDarwinAvroBuilder implements CommandBuilder {
                 }
             });
 
+            messageFields.forEach(morphlineRecord::removeAll);
+
             return avroMap.entrySet().stream()
-                    .map(el -> new AbstractMap.SimpleEntry<>(el.getKey(), decodeAvro(el.getValue())))
+                    .map(el -> {
+                        LOG.debug("Decoding message for table: {}", el.getKey());
+                        return new AbstractMap.SimpleEntry<>(el.getKey(), decodeAvro(el.getValue()));
+                    })
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
